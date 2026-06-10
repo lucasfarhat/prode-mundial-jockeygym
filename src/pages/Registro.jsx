@@ -1,6 +1,16 @@
 import { useState } from 'react'
 import { signUp, signIn } from '../lib/supabase'
 
+const SEDES = [
+  'DISTRITO',
+  'BARRIO SUR',
+  'BARRIO NORTE (MUÑECAS)',
+  'CENTRO',
+  'SOLAR',
+  'CATALINAS',
+  'PERON',
+]
+
 export default function Registro({ onSuccess }) {
   const [mode, setMode] = useState('register') // 'register' | 'login'
   const [loading, setLoading] = useState(false)
@@ -8,7 +18,7 @@ export default function Registro({ onSuccess }) {
   const [success, setSuccess] = useState('')
 
   const [form, setForm] = useState({
-    nombre: '', email: '', telefono: '', password: '',
+    nombre: '', apellido: '', email: '', sede: '', telefono: '', password: '',
   })
 
   function handleChange(e) {
@@ -22,8 +32,12 @@ export default function Registro({ onSuccess }) {
       setError('Completá email y contraseña.')
       return
     }
-    if (mode === 'register' && (!form.nombre || !form.telefono)) {
+    if (mode === 'register' && (!form.nombre || !form.apellido || !form.telefono)) {
       setError('Completá todos los campos.')
+      return
+    }
+    if (mode === 'register' && !form.sede) {
+      setError('Elegí tu sede.')
       return
     }
     if (form.password.length < 6) {
@@ -34,7 +48,14 @@ export default function Registro({ onSuccess }) {
     setLoading(true)
     try {
       if (mode === 'register') {
-        await signUp({ email: form.email, password: form.password, nombre: form.nombre, telefono: form.telefono })
+        await signUp({
+          email: form.email,
+          password: form.password,
+          nombre: form.nombre,
+          apellido: form.apellido,
+          telefono: form.telefono,
+          sede: form.sede,
+        })
         setSuccess('¡Cuenta creada! Ya podés cargar tus pronósticos. 🎉')
         setTimeout(() => onSuccess?.(), 1500)
       } else {
@@ -62,12 +83,12 @@ export default function Registro({ onSuccess }) {
         {mode === 'register' && (
           <>
             <div className="form-row">
-              <label className="form-label">Nombre completo</label>
-              <input className="form-input" name="nombre" placeholder="Ej: Juan Pérez" value={form.nombre} onChange={handleChange} />
+              <label className="form-label">Nombre</label>
+              <input className="form-input" name="nombre" placeholder="Ej: Juan" value={form.nombre} onChange={handleChange} />
             </div>
             <div className="form-row">
-              <label className="form-label">Teléfono</label>
-              <input className="form-input" name="telefono" type="tel" placeholder="+54 9 381 000-0000" value={form.telefono} onChange={handleChange} />
+              <label className="form-label">Apellido</label>
+              <input className="form-input" name="apellido" placeholder="Ej: Pérez" value={form.apellido} onChange={handleChange} />
             </div>
           </>
         )}
@@ -76,6 +97,24 @@ export default function Registro({ onSuccess }) {
           <label className="form-label">Email</label>
           <input className="form-input" name="email" type="email" placeholder="juan@ejemplo.com" value={form.email} onChange={handleChange} />
         </div>
+
+        {mode === 'register' && (
+          <>
+            <div className="form-row">
+              <label className="form-label">Sede</label>
+              <select className="form-input" name="sede" value={form.sede} onChange={handleChange}>
+                <option value="">Elegí tu sede</option>
+                {SEDES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-row">
+              <label className="form-label">Teléfono</label>
+              <input className="form-input" name="telefono" type="tel" placeholder="+54 9 381 000-0000" value={form.telefono} onChange={handleChange} />
+            </div>
+          </>
+        )}
 
         <div className="form-row">
           <label className="form-label">Contraseña</label>

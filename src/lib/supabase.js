@@ -7,18 +7,18 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // --- AUTH ---
 
-export async function signUp({ email, password, nombre, telefono }) {
+export async function signUp({ email, password, nombre, apellido, telefono, sede }) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { nombre, telefono },
+      data: { nombre, apellido, telefono, sede },
     },
   })
   if (error) throw error
 
   // El perfil se crea automaticamente via trigger on_auth_user_created
-  // (ver supabase-fix-perfil-trigger.sql). nombre y telefono viajan en
+  // (ver supabase-registro-sede.sql). Los datos extra viajan en
   // options.data y quedan en raw_user_meta_data.
   return data
 }
