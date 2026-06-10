@@ -1,7 +1,8 @@
 -- ============================================================
 -- PREMIOS SEMANALES + MULTIPLES GANADORES + SORTEO POR EMPATE
 -- Ejecutar en: supabase.com → tu proyecto → SQL Editor
--- (correr DESPUES del schema base; es idempotente, se puede re-correr)
+-- (correr DESPUES del schema base y de supabase-registro-sede.sql,
+--  porque usa la columna perfiles.apellido; es idempotente)
 -- ============================================================
 
 -- 0. Funcion is_admin (ya existe en prod por el fix de RLS recursion;
@@ -105,7 +106,7 @@ begin
   with stats as (
     select
       pr.user_id,
-      p.nombre,
+      trim(p.nombre || ' ' || coalesce(p.apellido, '')) as nombre,
       sum(pr.puntos_obtenidos)::int as puntos,
       count(*) filter (where pr.puntos_obtenidos = 3)::int as exactos,
       coalesce(sum(
@@ -117,7 +118,7 @@ begin
     join public.perfiles p on p.id = pr.user_id
     where pa.fecha::date between p_fecha_inicio and p_fecha_fin
       and pa.jugado = true
-    group by pr.user_id, p.nombre
+    group by pr.user_id, p.nombre, p.apellido
   ),
   ranked as (
     select *,

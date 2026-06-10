@@ -36,3 +36,24 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row
   execute function public.handle_new_user();
+
+
+-- ============================================================
+-- TABLA DE POSICIONES: mostrar nombre y apellido
+-- (misma vista del schema base, solo cambia la columna nombre)
+-- ============================================================
+create or replace view public.tabla_posiciones as
+select
+  p.id as user_id,
+  trim(p.nombre || ' ' || coalesce(p.apellido, '')) as nombre,
+  count(case when pr.puntos_obtenidos = 3 then 1 end) as exactos,
+  count(case when pr.puntos_obtenidos = 1 then 1 end) as ganadores,
+  coalesce(sum(pr.puntos_obtenidos), 0) as puntos,
+  coalesce(sum(
+    abs(pr.goles_local - pa.resultado_local) +
+    abs(pr.goles_visitante - pa.resultado_visitante)
+  ) filter (where pa.jugado = true), 0) as diferencia_total
+from public.perfiles p
+left join public.pronosticos pr on pr.user_id = p.id
+left join public.partidos pa on pa.id = pr.partido_id
+group by p.id, p.nombre, p.apellido;
