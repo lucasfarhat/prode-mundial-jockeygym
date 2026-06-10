@@ -96,6 +96,70 @@ export async function getGanadoresSemanales() {
     .from('ganadores_semanales')
     .select('*')
     .order('semana', { ascending: false })
+    .order('puntos_semana', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+// --- PREMIOS SEMANALES ---
+
+export async function getPremios() {
+  const { data, error } = await supabase
+    .from('premios_semanales')
+    .select('*')
+    .order('semana', { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export async function guardarPremio({ semana, premio, cantidadGanadores }) {
+  const { error } = await supabase
+    .from('premios_semanales')
+    .upsert({
+      semana,
+      premio,
+      cantidad_ganadores: cantidadGanadores,
+      updated_at: new Date().toISOString(),
+    })
+  if (error) throw error
+}
+
+export async function borrarPremio(semana) {
+  const { error } = await supabase
+    .from('premios_semanales')
+    .delete()
+    .eq('semana', semana)
+  if (error) throw error
+}
+
+// --- ADMIN: ganadores semanales y sorteo ---
+
+export async function calcularGanadoresSemana({ semana, fechaInicio, fechaFin }) {
+  const { data, error } = await supabase.rpc('calcular_ganadores_semana', {
+    p_semana: semana,
+    p_fecha_inicio: fechaInicio,
+    p_fecha_fin: fechaFin,
+  })
+  if (error) throw error
+  return data
+}
+
+export async function sortearGanadoresSemana(semana) {
+  const { data, error } = await supabase.rpc('sortear_ganadores_semana', {
+    p_semana: semana,
+  })
+  if (error) throw error
+  return data
+}
+
+export async function getGanadoresDeSemana(semana) {
+  const { data, error } = await supabase
+    .from('ganadores_semanales')
+    .select('*')
+    .eq('semana', semana)
+    .order('puntos_semana', { ascending: false })
+    .order('exactos_semana', { ascending: false })
+    .order('diferencia_semana', { ascending: true })
   if (error) throw error
   return data
 }
