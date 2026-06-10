@@ -1,12 +1,21 @@
 import { useState, useEffect } from 'react'
 import { supabase, getSession } from './lib/supabase'
-import faguLogo from './assets/fagu-logo.png'
 import Fixture from './pages/Fixture'
 import Tabla from './pages/Tabla'
 import Semanal from './pages/Semanal'
 import Registro from './pages/Registro'
 import Reglas from './pages/Reglas'
 import Admin from './pages/Admin'
+
+function JockeyLogo({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-label="Jockey Gym">
+      <rect width="64" height="64" rx="10" fill="#0099CC"/>
+      <path d="M14 46 L26 18 L34 18 L22 46 Z" fill="#ffffff"/>
+      <path d="M30 46 L42 18 L50 18 L38 46 Z" fill="#ffffff"/>
+    </svg>
+  )
+}
 
 const NAV = [
   { id: 'fixture', label: 'Fixture', icon: '⚽' },
@@ -74,10 +83,10 @@ export default function App() {
     <div className="app">
       <header className="header">
         <div className="header-bar">
-          <img className="brand-logo" src={faguLogo} alt="fagú Comida Árabe" />
+          <JockeyLogo className="brand-logo" />
           <div className="brand-divider" />
           <div className="brand-text">
-            <div className="brand-kicker">fagú · Comida Árabe</div>
+            <div className="brand-kicker">JOCKEY · GYM</div>
             <div className="brand-title">Prode Mundial <span>2026</span></div>
             <div className="brand-sub">⚽ México · EE.UU. · Canadá</div>
           </div>
@@ -108,8 +117,8 @@ export default function App() {
       </main>
 
       <footer className="site-footer">
-        <img className="footer-logo" src={faguLogo} alt="fagú" />
-        <div className="footer-text">Organiza <b>fagú</b> · Comida Árabe</div>
+        <JockeyLogo className="footer-logo" />
+        <div className="footer-text">Organiza <b>Jockey Gym</b></div>
         <div className="footer-mini">Prode Mundial 2026</div>
       </footer>
     </div>
