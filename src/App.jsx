@@ -31,27 +31,45 @@ export default function App() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getSession().then(async (s) => {
-      setSession(s)
-      if (s?.user) await fetchPerfil(s.user.id)
-      setLoading(false)
-    })
+    let mounted = true
+
+    // Pase lo que pase, la app no puede quedarse colgada en "Cargando...":
+    // si getSession falla o se demora, entra como deslogueado y el
+    // onAuthStateChange la actualiza cuando la sesion aparezca.
+    getSession()
+      .then(async (s) => {
+        if (!mounted) return
+        setSession(s)
+        if (s?.user) await fetchPerfil(s.user.id)
+      })
+      .catch((err) => {
+        console.error('getSession fallo en la carga inicial:', err)
+      })
+      .finally(() => {
+        if (mounted) setLoading(false)
+      })
 
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, s) => {
+      if (!mounted) return
       setSession(s)
       if (s?.user) await fetchPerfil(s.user.id)
       else setPerfil(null)
     })
-    return () => listener.subscription.unsubscribe()
+
+    return () => {
+      mounted = false
+      listener.subscription.unsubscribe()
+    }
   }, [])
 
   async function fetchPerfil(userId) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('perfiles')
       .select('*')
       .eq('id', userId)
-      .single()
-    setPerfil(data)
+      .maybeSingle()
+    if (error) console.error('fetchPerfil error:', error)
+    setPerfil(data ?? null)
   }
 
   if (loading) {
