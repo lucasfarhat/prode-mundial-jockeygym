@@ -14,7 +14,7 @@ const FASES = [
 function isLocked(fechaStr) {
   const fecha = new Date(fechaStr)
   const ahora = new Date()
-  return ahora >= new Date(fecha.getTime() - 60 * 60 * 1000)
+  return ahora >= new Date(fecha.getTime() - 1 * 60 * 1000)
 }
 
 function formatFecha(fechaStr) {
@@ -24,6 +24,7 @@ function formatFecha(fechaStr) {
 
 export default function Fixture({ session }) {
   const [fase, setFase] = useState('Grupos')
+  const [fechaActual, setFechaActual] = useState(null)
   const [pronosticos, setPronosticos] = useState({})
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -64,6 +65,10 @@ export default function Fixture({ session }) {
     try {
       const promises = Object.entries(pronosticos).map(([partidoId, val]) => {
         if (val.h === '' || val.h === undefined || val.a === '' || val.a === undefined) return null
+        // No reenviar pronosticos de partidos ya cerrados: la RLS los
+        // rechazaria y romperia el guardado de los partidos que siguen.
+        const partido = todosLosPartidos.find((p) => p.id === parseInt(partidoId))
+        if (!partido || isLocked(partido.fecha)) return null
         return guardarPronostico({
           userId: session.user.id,
           partidoId: parseInt(partidoId),
@@ -80,16 +85,56 @@ export default function Fixture({ session }) {
     setSaving(false)
   }
 
-  const partidos = todosLosPartidos.filter((p) => p.fase === fase)
+  const partidosDeFase = todosLosPartidos.filter((p) => p.fase === fase)
 
-  // Agrupar por grupo en fase de grupos
-  const grupos = {}
+  // Jornada dentro del grupo: cada grupo juega 3 fechas de 2 partidos.
+  // Se ordenan los partidos del grupo por fecha y se toman de a pares.
+  const calcularJornada = (partido) => {
+    if (fase !== 'Grupos') return null
+    const partidosDelGrupo = partidosDeFase
+      .filter((p) => p.grupo === partido.grupo)
+      .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+    const idx = partidosDelGrupo.findIndex((p) => p.id === partido.id)
+    return Math.floor(idx / 2) + 1
+  }
+
+  const partidosConJornada = fase === 'Grupos'
+    ? partidosDeFase.map((p) => ({ ...p, jornada: calcularJornada(p) }))
+    : partidosDeFase
+
+  const jornadas = fase === 'Grupos'
+    ? [...new Set(partidosConJornada.map((p) => p.jornada))].sort((a, b) => a - b)
+    : [1]
+
+  useEffect(() => {
+    if (jornadas.length && !fechaActual) {
+      setFechaActual(jornadas[0])
+    }
+  }, [fase])
+
+  // Auto-avance: cuando todos los partidos de la jornada visible estan
+  // jugados, pasa a la siguiente.
+  useEffect(() => {
+    if (!fechaActual || jornadas.length === 0) return
+    const partidosDeJornada = partidosConJornada.filter((p) => p.jornada === fechaActual)
+    const todosTerminaron = partidosDeJornada.length > 0 && partidosDeJornada.every((p) => {
+      const real = dbPartidos.find((r) => r.id === p.id)
+      return real?.jugado
+    })
+    if (todosTerminaron && jornadas.indexOf(fechaActual) < jornadas.length - 1) {
+      setFechaActual(jornadas[jornadas.indexOf(fechaActual) + 1])
+    }
+  }, [dbPartidos, fechaActual, jornadas, partidosConJornada])
+
+  const partidosDeJornada = partidosConJornada.filter((p) => p.jornada === fechaActual)
+  const gruposDeJornada = {}
   if (fase === 'Grupos') {
-    partidos.forEach((p) => {
-      if (!grupos[p.grupo]) grupos[p.grupo] = []
-      grupos[p.grupo].push(p)
+    partidosDeJornada.forEach((p) => {
+      if (!gruposDeJornada[p.grupo]) gruposDeJornada[p.grupo] = []
+      gruposDeJornada[p.grupo].push(p)
     })
   }
+  const partidos = fase === 'Grupos' ? partidosDeJornada : partidosDeFase
 
   function getResultadoReal(id) {
     return dbPartidos.find((p) => p.id === id)
@@ -159,7 +204,7 @@ export default function Fixture({ session }) {
         </div>
       )}
       <div className="alert alert-info">
-        🔒 Los pronósticos se cierran 1 hora antes de cada partido.
+        🔒 Los pronósticos se cierran 1 minuto antes de cada partido.
       </div>
 
       <div className="phase-tabs">
@@ -167,29 +212,58 @@ export default function Fixture({ session }) {
           <button
             key={f.id}
             className={`tab-btn ${fase === f.id ? 'active' : ''}`}
-            onClick={() => setFase(f.id)}
+            onClick={() => { setFase(f.id); setFechaActual(null) }}
           >
             {f.label}
           </button>
         ))}
       </div>
 
+      {fase === 'Grupos' && jornadas.length > 0 && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: '1rem', overflowX: 'auto', paddingBottom: 4 }}>
+          {jornadas.map((j) => (
+            <button
+              key={j}
+              onClick={() => setFechaActual(j)}
+              style={{
+                padding: '7px 14px',
+                border: j === fechaActual ? 'none' : '1px solid #ddd',
+                borderRadius: '999px',
+                background: j === fechaActual ? 'var(--gold)' : '#fff',
+                color: j === fechaActual ? '#fff' : '#666',
+                cursor: 'pointer',
+                fontSize: 12,
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                transition: 'all .15s',
+              }}
+            >
+              Fecha {j}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="card">
-        {fase === 'Grupos' ? (
-          Object.entries(grupos).map(([grupo, ps]) => (
-            <div key={grupo}>
-              <div className="group-title">Grupo {grupo}</div>
-              {ps.map(renderMatch)}
-            </div>
-          ))
+        {partidos.length > 0 ? (
+          <>
+            {fase === 'Grupos' && fechaActual && (
+              <>
+                <div className="group-title">Fecha {fechaActual}</div>
+                {Object.entries(gruposDeJornada).map(([grupo, ps]) => (
+                  <div key={grupo}>
+                    <div className="group-title" style={{ marginTop: '0.8rem' }}>Grupo {grupo}</div>
+                    {ps.map(renderMatch)}
+                  </div>
+                ))}
+              </>
+            )}
+            {fase !== 'Grupos' && partidos.map(renderMatch)}
+          </>
         ) : (
-          partidos.length > 0
-            ? partidos.map(renderMatch)
-            : (
-              <div style={{ color: '#aaa', fontSize: 13, padding: '1rem 0' }}>
-                Esta fase se activa a medida que avanza el torneo.
-              </div>
-            )
+          <div style={{ color: '#aaa', fontSize: 13, padding: '1rem 0' }}>
+            Esta fase se activa a medida que avanza el torneo.
+          </div>
         )}
       </div>
 
