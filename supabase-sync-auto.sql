@@ -42,11 +42,12 @@ declare
   v_updated int := 0;
   v_pending int;
 begin
-  -- Solo llama a la API si hay partidos que ya deberian haber terminado
-  -- y siguen sin resultado (ahorra llamadas fuera de los dias de partido).
+  -- Llama a la API si hay resultados pendientes O partidos en las proximas
+  -- 48 horas (asi tambien refresca horarios que la FIFA pueda mover).
   select count(*) into v_pending
   from public.partidos
-  where jugado = false and external_id is not null and fecha < now() - interval '100 minutes';
+  where jugado = false and external_id is not null
+    and fecha < now() + interval '48 hours';
   if v_pending = 0 then return 0; end if;
 
   select value into v_key from private.secrets where name = 'footballdata_key';
@@ -54,7 +55,7 @@ begin
 
   select * into v_resp from extensions.http((
     'GET',
-    'https://api.football-data.org/v4/competitions/2000/matches?status=FINISHED',
+    'https://api.football-data.org/v4/competitions/2000/matches',
     array[extensions.http_header('X-Auth-Token', v_key)],
     null, null
   )::extensions.http_request);
@@ -73,6 +74,13 @@ begin
           jugado = true
       where p.external_id = (v_m ->> 'id') and p.jugado = false;
       if found then v_updated := v_updated + 1; end if;
+    elsif (v_m->>'status') in ('SCHEDULED', 'TIMED') then
+      -- Horario oficial actualizado (la FIFA mueve partidos despues del sorteo)
+      update public.partidos p
+      set fecha = (v_m ->> 'utcDate')::timestamptz
+      where p.external_id = (v_m ->> 'id')
+        and p.jugado = false
+        and p.fecha is distinct from (v_m ->> 'utcDate')::timestamptz;
     end if;
   end loop;
   return v_updated;

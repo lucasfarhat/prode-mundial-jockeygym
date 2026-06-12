@@ -141,9 +141,12 @@ export default function Fixture({ session }) {
   }
 
   function renderMatch(partido) {
-    const locked = isLocked(partido.fecha)
-    const pron = pronosticos[partido.id] || {}
     const real = getResultadoReal(partido.id)
+    // La fecha de la base manda: el sync la mantiene alineada con el
+    // calendario oficial (la FIFA puede mover horarios despues del sorteo).
+    const fechaPartido = real?.fecha ?? partido.fecha
+    const locked = isLocked(fechaPartido)
+    const pron = pronosticos[partido.id] || {}
     const jugado = real?.jugado
 
     return (
@@ -175,7 +178,7 @@ export default function Fixture({ session }) {
               disabled={locked}
             />
           </div>
-          <span className="match-meta">{formatFecha(partido.fecha)}</span>
+          <span className="match-meta">{formatFecha(fechaPartido)}</span>
           {jugado && (
             <span className="match-meta" style={{ color: '#555', fontWeight: 600 }}>
               {real.resultado_local} - {real.resultado_visitante}
