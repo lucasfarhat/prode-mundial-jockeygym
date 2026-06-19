@@ -1,26 +1,57 @@
 import { useState, useEffect } from 'react'
-import { getTablaPosiciones } from '../lib/supabase'
+import { getTablaPosiciones, getTablaSemanaActual } from '../lib/supabase'
 
 export default function Tabla() {
+  const [vista, setVista] = useState('completa') // 'semana' | 'completa'
   const [jugadores, setJugadores] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getTablaPosiciones().then((data) => {
+    setLoading(true)
+    const fetcher = vista === 'semana' ? getTablaSemanaActual : getTablaPosiciones
+    fetcher().then((data) => {
       setJugadores(data || [])
       setLoading(false)
     }).catch(() => setLoading(false))
-  }, [])
-
-  if (loading) return <div style={{ color: '#aaa', padding: '1rem' }}>Cargando tabla...</div>
+  }, [vista])
 
   const medals = ['🥇', '🥈', '🥉']
+
+  const tabBtn = (activo) => ({
+    flex: 1,
+    padding: '10px 14px',
+    border: activo ? 'none' : '1px solid #ddd',
+    borderRadius: 10,
+    background: activo ? 'var(--gold)' : '#fff',
+    color: activo ? '#fff' : '#666',
+    cursor: 'pointer',
+    fontSize: 13,
+    fontWeight: 700,
+    transition: 'all .15s',
+  })
 
   return (
     <div>
       <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: '1rem' }}>Tabla de posiciones</h2>
 
-      {jugadores.length === 0 ? (
+      <div style={{ display: 'flex', gap: 8, marginBottom: '1rem' }}>
+        <button onClick={() => setVista('semana')} style={tabBtn(vista === 'semana')}>
+          📅 SEMANA EN CURSO
+        </button>
+        <button onClick={() => setVista('completa')} style={tabBtn(vista === 'completa')}>
+          🏆 TABLA COMPLETA
+        </button>
+      </div>
+
+      {vista === 'semana' && (
+        <div className="alert alert-info" style={{ marginBottom: '1rem' }}>
+          🔥 Solo cuenta los partidos de <strong>esta semana</strong>. ¡Sumate ahora y peleá el premio semanal aunque arranques tarde!
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{ color: '#aaa', padding: '1rem' }}>Cargando tabla...</div>
+      ) : jugadores.length === 0 ? (
         <div className="alert alert-info">
           Aún no hay pronósticos cargados. ¡Sé el primero en jugar!
         </div>
@@ -45,7 +76,7 @@ export default function Tabla() {
                   <th>Jugador</th>
                   <th style={{ textAlign: 'center' }}>Exactos</th>
                   <th style={{ textAlign: 'center' }}>Ganadores</th>
-                  <th style={{ color: '#1a4fa0', textAlign: 'center' }}>Pts</th>
+                  <th style={{ color: 'var(--gold-deep)', textAlign: 'center' }}>Pts</th>
                 </tr>
               </thead>
               <tbody>

@@ -78,9 +78,21 @@ export async function getPartidos() {
 // --- TABLA DE POSICIONES ---
 
 export async function getTablaPosiciones() {
-  // Vista de Supabase que calcula puntos por usuario
+  // Vista de Supabase que calcula puntos por usuario (acumulado del torneo)
   const { data, error } = await supabase
     .from('tabla_posiciones')
+    .select('*')
+    .order('puntos', { ascending: false })
+    .order('exactos', { ascending: false })
+    .order('diferencia_total', { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export async function getTablaSemanaActual() {
+  // Vista que cuenta solo los partidos de la semana en curso (lun-dom ART)
+  const { data, error } = await supabase
+    .from('tabla_semana_actual')
     .select('*')
     .order('puntos', { ascending: false })
     .order('exactos', { ascending: false })
