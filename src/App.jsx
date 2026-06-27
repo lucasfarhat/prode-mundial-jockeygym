@@ -32,32 +32,44 @@ export default function App() {
 
   useEffect(() => {
     let mounted = true
+    let settled = false
 
-    // Pase lo que pase, la app no puede quedarse colgada en "Cargando...":
-    // si getSession falla o se demora, entra como deslogueado y el
-    // onAuthStateChange la actualiza cuando la sesion aparezca.
+    // La app no puede quedarse colgada en "Cargando...". A veces getSession
+    // y onAuthStateChange nunca resuelven (cuando el refresh del token se
+    // cuelga en la primera carga), asi que ni el .finally() corre. Esta red
+    // de seguridad muestra la app igual a los 2.5s; si despues la sesion se
+    // recupera, onAuthStateChange actualiza todo solo.
+    const finishLoading = () => {
+      if (mounted && !settled) {
+        settled = true
+        setLoading(false)
+      }
+    }
+    const timer = setTimeout(finishLoading, 2500)
+
     getSession()
-      .then(async (s) => {
+      .then((s) => {
         if (!mounted) return
         setSession(s)
-        if (s?.user) await fetchPerfil(s.user.id)
+        // Sin await: el perfil carga en segundo plano y no bloquea la pantalla.
+        if (s?.user) fetchPerfil(s.user.id)
       })
       .catch((err) => {
         console.error('getSession fallo en la carga inicial:', err)
       })
-      .finally(() => {
-        if (mounted) setLoading(false)
-      })
+      .finally(finishLoading)
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, s) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, s) => {
       if (!mounted) return
       setSession(s)
-      if (s?.user) await fetchPerfil(s.user.id)
+      if (s?.user) fetchPerfil(s.user.id)
       else setPerfil(null)
+      finishLoading()
     })
 
     return () => {
       mounted = false
+      clearTimeout(timer)
       listener.subscription.unsubscribe()
     }
   }, [])
