@@ -170,7 +170,7 @@ export default function Admin() {
   }
 
   const filtrados = todosLosPartidos.filter((p) => p.fase === fase)
-  const fases = ['Grupos', 'R16', 'QF', 'SF', 'F']
+  const fases = ['Grupos', 'R32', 'R16', 'QF', 'SF', 'F']
 
   return (
     <div>

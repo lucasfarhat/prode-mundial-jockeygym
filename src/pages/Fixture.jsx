@@ -5,6 +5,7 @@ import Flag from '../components/Flag'
 
 const FASES = [
   { id: 'Grupos', label: 'Grupos' },
+  { id: 'R32', label: '16avos' },
   { id: 'R16', label: 'Octavos' },
   { id: 'QF', label: 'Cuartos' },
   { id: 'SF', label: 'Semis' },
