@@ -169,8 +169,14 @@ export default function Admin() {
     }))
   }
 
-  const filtrados = todosLosPartidos.filter((p) => p.fase === fase)
-  const fases = ['Grupos', 'R32', 'R16', 'QF', 'SF', 'F']
+  // Grupos: del fixture estatico. Eliminatorias: de la base (las crea el sync).
+  const filtrados = fase === 'Grupos'
+    ? todosLosPartidos.filter((p) => p.fase === fase)
+    : partidos
+        .filter((p) => p.fase === fase)
+        .map((p) => ({ id: p.id, fase: p.fase, local: p.equipo_local, flagLocal: p.flag_local, visitante: p.equipo_visitante, flagVisitante: p.flag_visitante }))
+        .sort((a, b) => a.id - b.id)
+  const fases = ['Grupos', 'R32', 'R16', 'QF', 'SF', '3P', 'F']
 
   return (
     <div>

@@ -9,6 +9,7 @@ const FASES = [
   { id: 'R16', label: 'Octavos' },
   { id: 'QF', label: 'Cuartos' },
   { id: 'SF', label: 'Semis' },
+  { id: '3P', label: '3er puesto' },
   { id: 'F', label: 'Final' },
 ]
 
@@ -68,10 +69,11 @@ export default function Fixture({ session }) {
         if (val.h === '' || val.h === undefined || val.a === '' || val.a === undefined) return null
         // No reenviar pronosticos de partidos ya cerrados: la RLS los
         // rechazaria y romperia el guardado de los partidos que siguen.
-        // Para eliminatorias usamos la fecha de la base (la mantiene el sync).
-        const partido = todosLosPartidos.find((p) => p.id === parseInt(partidoId))
-        if (!partido) return null
+        // El partido puede venir del fixture (grupos) o de la base (elim);
+        // para el cierre mandamos la fecha de la base (la mantiene el sync).
         const real = dbPartidos.find((p) => p.id === parseInt(partidoId))
+        const partido = todosLosPartidos.find((p) => p.id === parseInt(partidoId)) || real
+        if (!partido) return null
         if (isLocked(real?.fecha ?? partido.fecha)) return null
         return guardarPronostico({
           userId: session.user.id,
@@ -89,7 +91,14 @@ export default function Fixture({ session }) {
     setSaving(false)
   }
 
-  const partidosDeFase = todosLosPartidos.filter((p) => p.fase === fase)
+  // Grupos: desde el fixture estatico (nombres con tildes para las banderas).
+  // Eliminatorias: directo de la base, que el sync crea y completa solo.
+  const partidosDeFase = fase === 'Grupos'
+    ? todosLosPartidos.filter((p) => p.fase === fase)
+    : dbPartidos
+        .filter((p) => p.fase === fase)
+        .map((p) => ({ id: p.id, fase: p.fase, local: p.equipo_local, visitante: p.equipo_visitante, fecha: p.fecha }))
+        .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
 
   // Jornada dentro del grupo: cada grupo juega 3 fechas de 2 partidos.
   // Se ordenan los partidos del grupo por fecha y se toman de a pares.
