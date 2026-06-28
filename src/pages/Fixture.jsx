@@ -68,8 +68,11 @@ export default function Fixture({ session }) {
         if (val.h === '' || val.h === undefined || val.a === '' || val.a === undefined) return null
         // No reenviar pronosticos de partidos ya cerrados: la RLS los
         // rechazaria y romperia el guardado de los partidos que siguen.
+        // Para eliminatorias usamos la fecha de la base (la mantiene el sync).
         const partido = todosLosPartidos.find((p) => p.id === parseInt(partidoId))
-        if (!partido || isLocked(partido.fecha)) return null
+        if (!partido) return null
+        const real = dbPartidos.find((p) => p.id === parseInt(partidoId))
+        if (isLocked(real?.fecha ?? partido.fecha)) return null
         return guardarPronostico({
           userId: session.user.id,
           partidoId: parseInt(partidoId),
@@ -143,18 +146,24 @@ export default function Fixture({ session }) {
 
   function renderMatch(partido) {
     const real = getResultadoReal(partido.id)
-    // La fecha de la base manda: el sync la mantiene alineada con el
-    // calendario oficial (la FIFA puede mover horarios despues del sorteo).
+    // En eliminatorias el dato de la base manda: el sync mantiene fecha y
+    // equipos al dia (la FIFA mueve horarios y los cruces se definen al
+    // terminar los grupos). En grupos seguimos con los nombres del fixture
+    // (que tienen las tildes que usan las banderas).
+    const esElim = partido.fase !== 'Grupos'
     const fechaPartido = real?.fecha ?? partido.fecha
-    const locked = isLocked(fechaPartido)
+    const localName = esElim ? (real?.equipo_local ?? partido.local) : partido.local
+    const visitanteName = esElim ? (real?.equipo_visitante ?? partido.visitante) : partido.visitante
+    const sinDefinir = localName === 'Por definir' || visitanteName === 'Por definir'
+    const locked = sinDefinir || isLocked(fechaPartido)
     const pron = pronosticos[partido.id] || {}
     const jugado = real?.jugado
 
     return (
       <div className="match-row" key={partido.id}>
         <div className="team">
-          <Flag name={partido.local} emoji={partido.flagLocal} />
-          <span className="team-name">{partido.local}</span>
+          <Flag name={localName} emoji={partido.flagLocal} />
+          <span className="team-name">{localName}</span>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
@@ -187,14 +196,16 @@ export default function Fixture({ session }) {
               {pron.pts === 1 && <span className="match-pts pts-winner"> ✓ 1pt</span>}
             </span>
           )}
-          {locked && !jugado && (
+          {sinDefinir ? (
+            <span className="match-meta" style={{ color: '#999' }}>⏳ A definir</span>
+          ) : locked && !jugado && (
             <span className="match-meta" style={{ color: '#e07000' }}>🔒 Cerrado</span>
           )}
         </div>
 
         <div className="team right">
-          <Flag name={partido.visitante} emoji={partido.flagVisitante} />
-          <span className="team-name">{partido.visitante}</span>
+          <Flag name={visitanteName} emoji={partido.flagVisitante} />
+          <span className="team-name">{visitanteName}</span>
         </div>
       </div>
     )

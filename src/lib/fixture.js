@@ -103,8 +103,28 @@ export const PARTIDOS_GRUPOS = [
   { id: 72, fase: 'Grupos', grupo: 'L', local: 'Croacia', visitante: 'Ghana', fecha: '2026-06-27T18:00:00-03:00', estadio: 'Lincoln Financial Field', ciudad: 'Filadelfia' },
 ]
 
-// Fases eliminatorias: placeholders hasta que se definan los cruces.
-// (El Mundial 2026 arranca con dieciseisavos / Ronda de 32.)
-export const PARTIDOS_ELIMINATORIOS = []
+// Fases eliminatorias. Los 16avos (Ronda de 32) ya estan cargados con
+// fechas e ids reales; los cruces que la API aun no definio figuran como
+// 'Por definir' y el sync los completa solo (la app lee nombre y fecha
+// desde la base para estas fases). Octavos en adelante: pendientes.
+export const PARTIDOS_ELIMINATORIOS = [
+  // 16AVOS (Ronda de 32)
+  { id: 73, fase: 'R32', local: 'Sudáfrica', visitante: 'Canadá', fecha: '2026-06-28T16:00:00-03:00' },
+  { id: 74, fase: 'R32', local: 'Brasil', visitante: 'Japón', fecha: '2026-06-29T14:00:00-03:00' },
+  { id: 75, fase: 'R32', local: 'Alemania', visitante: 'Por definir', fecha: '2026-06-29T17:30:00-03:00' },
+  { id: 76, fase: 'R32', local: 'Países Bajos', visitante: 'Marruecos', fecha: '2026-06-29T22:00:00-03:00' },
+  { id: 77, fase: 'R32', local: 'Costa de Marfil', visitante: 'Por definir', fecha: '2026-06-30T14:00:00-03:00' },
+  { id: 78, fase: 'R32', local: 'Por definir', visitante: 'Por definir', fecha: '2026-06-30T18:00:00-03:00' },
+  { id: 79, fase: 'R32', local: 'México', visitante: 'Por definir', fecha: '2026-06-30T22:00:00-03:00' },
+  { id: 80, fase: 'R32', local: 'Por definir', visitante: 'Por definir', fecha: '2026-07-01T13:00:00-03:00' },
+  { id: 81, fase: 'R32', local: 'Por definir', visitante: 'Por definir', fecha: '2026-07-01T17:00:00-03:00' },
+  { id: 82, fase: 'R32', local: 'EE.UU.', visitante: 'Bosnia y Herzegovina', fecha: '2026-07-01T21:00:00-03:00' },
+  { id: 83, fase: 'R32', local: 'Por definir', visitante: 'Por definir', fecha: '2026-07-02T16:00:00-03:00' },
+  { id: 84, fase: 'R32', local: 'Por definir', visitante: 'Por definir', fecha: '2026-07-02T20:00:00-03:00' },
+  { id: 85, fase: 'R32', local: 'Suiza', visitante: 'Por definir', fecha: '2026-07-03T00:00:00-03:00' },
+  { id: 86, fase: 'R32', local: 'Australia', visitante: 'Por definir', fecha: '2026-07-03T15:00:00-03:00' },
+  { id: 87, fase: 'R32', local: 'Argentina', visitante: 'Por definir', fecha: '2026-07-03T19:00:00-03:00' },
+  { id: 88, fase: 'R32', local: 'Por definir', visitante: 'Por definir', fecha: '2026-07-03T22:30:00-03:00' },
+]
 
 export const TODAS_FASES = ['Grupos', 'R32', 'R16', 'QF', 'SF', 'F']

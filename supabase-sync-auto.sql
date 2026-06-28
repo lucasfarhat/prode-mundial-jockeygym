@@ -74,13 +74,22 @@ begin
           jugado = true
       where p.external_id = (v_m ->> 'id') and p.jugado = false;
       if found then v_updated := v_updated + 1; end if;
-    elsif (v_m->>'status') in ('SCHEDULED', 'TIMED') then
-      -- Horario oficial actualizado (la FIFA mueve partidos despues del sorteo)
+    elsif (v_m->>'status') in ('SCHEDULED', 'TIMED', 'IN_PLAY', 'PAUSED') then
+      -- Actualiza horario oficial (la FIFA mueve partidos) y, en
+      -- eliminatorias, completa los equipos que la API va definiendo.
+      -- Los nombres se traducen ingles->español con private.team_es para
+      -- que coincidan con las banderas. Si la API aun no definio el equipo
+      -- (homeTeam.name null), coalesce mantiene el 'Por definir' actual.
       update public.partidos p
-      set fecha = (v_m ->> 'utcDate')::timestamptz
+      set fecha = (v_m ->> 'utcDate')::timestamptz,
+          equipo_local = coalesce(
+            (select es from private.team_es where en = v_m #>> '{homeTeam,name}'),
+            p.equipo_local),
+          equipo_visitante = coalesce(
+            (select es from private.team_es where en = v_m #>> '{awayTeam,name}'),
+            p.equipo_visitante)
       where p.external_id = (v_m ->> 'id')
-        and p.jugado = false
-        and p.fecha is distinct from (v_m ->> 'utcDate')::timestamptz;
+        and p.jugado = false;
     end if;
   end loop;
   return v_updated;
