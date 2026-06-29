@@ -31,8 +31,23 @@ export default function Fixture({ session }) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [dbPartidos, setDbPartidos] = useState([])
+  const [faseElegida, setFaseElegida] = useState(false) // el usuario ya toco una pestaña?
 
   const todosLosPartidos = [...PARTIDOS_GRUPOS, ...PARTIDOS_ELIMINATORIOS]
+
+  // Al entrar, abrir en la fase que se esta jugando ahora (la del proximo
+  // partido sin jugar), no siempre en Grupos. Solo hasta que el usuario
+  // elija una pestaña manualmente.
+  useEffect(() => {
+    if (faseElegida || dbPartidos.length === 0) return
+    const pendientes = dbPartidos.filter((p) => !p.jugado && p.fecha)
+    let faseActual = 'F'
+    if (pendientes.length) {
+      faseActual = pendientes.reduce((a, b) => (new Date(a.fecha) < new Date(b.fecha) ? a : b)).fase
+    }
+    setFase(faseActual)
+    setFechaActual(null)
+  }, [dbPartidos, faseElegida])
 
   useEffect(() => {
     if (session?.user) {
@@ -236,7 +251,7 @@ export default function Fixture({ session }) {
           <button
             key={f.id}
             className={`tab-btn ${fase === f.id ? 'active' : ''}`}
-            onClick={() => { setFase(f.id); setFechaActual(null) }}
+            onClick={() => { setFase(f.id); setFechaActual(null); setFaseElegida(true) }}
           >
             {f.label}
           </button>
