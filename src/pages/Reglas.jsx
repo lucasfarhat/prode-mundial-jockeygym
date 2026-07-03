@@ -27,6 +27,15 @@ export default function Reglas() {
       </div>
 
       <div className="card">
+        <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>⏱ Resultado en fases eliminatorias</h3>
+        <div style={{ fontSize: 13, color: '#666', lineHeight: 1.7 }}>
+          <p style={{ marginBottom: 6 }}>En las fases eliminatorias, el resultado que vale es el del <strong>final de la prórroga</strong> (si la hay), no el de los 90 minutos.</p>
+          <p style={{ marginBottom: 6 }}>Si el partido va a <strong>penales</strong>, el resultado oficial del prode es el <strong>empate</strong> con el que terminó la prórroga: los penales no cuentan para los puntos.</p>
+          <p>Ejemplo: termina 1-1 tras la prórroga y se define por penales → el resultado es 1-1. Quien puso 1-1 se lleva 3 puntos, quien puso otro empate 1 punto, y quien eligió un ganador no suma.</p>
+        </div>
+      </div>
+
+      <div className="card">
         <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>Desempate en tabla general</h3>
         <div style={{ fontSize: 13, color: '#666', lineHeight: 1.7 }}>
           <p style={{ marginBottom: 6 }}>Cuando dos jugadores tienen los mismos puntos:</p>
@@ -39,7 +48,7 @@ export default function Reglas() {
       <div className="card">
         <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>🔒 Cierre de pronósticos</h3>
         <div style={{ fontSize: 13, color: '#666', lineHeight: 1.7 }}>
-          Los pronósticos se bloquean automáticamente <strong>1 hora antes</strong> del inicio de cada partido. Una vez cerrado el partido, no se puede modificar el pronóstico.
+          Los pronósticos se bloquean automáticamente <strong>1 minuto antes</strong> del inicio de cada partido. Una vez cerrado el partido, no se puede modificar el pronóstico.
         </div>
       </div>
 
@@ -54,7 +63,7 @@ export default function Reglas() {
       <div className="card">
         <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>📋 Fases del torneo</h3>
         <div style={{ fontSize: 13, color: '#666', lineHeight: 1.7 }}>
-          <p style={{ marginBottom: 6 }}>El Mundial 2026 tiene 48 selecciones divididas en 12 grupos de 4. Los dos primeros de cada grupo y los 8 mejores terceros avanzan a octavos de final.</p>
+          <p style={{ marginBottom: 6 }}>El Mundial 2026 tiene 48 selecciones divididas en 12 grupos de 4. Los dos primeros de cada grupo y los 8 mejores terceros avanzan a los 16avos de final.</p>
           <p>Los partidos de fases eliminatorias se habilitan a medida que se conocen los clasificados.</p>
         </div>
       </div>
