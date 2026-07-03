@@ -90,12 +90,18 @@ begin
     end;
 
     if (v_m->>'status') = 'FINISHED' and (v_m #>> '{score,fullTime,home}') is not null then
-      -- Resultado final
+      -- Resultado final (despues de prorroga; football-data.fullTime ya
+      -- incluye el alargue, sin penales). Autocorrige aunque el partido ya
+      -- estuviera cargado, si el oficial cambio (evita resultados "trabados"
+      -- por un dato intermedio). El trigger recalcula los puntos.
       update public.partidos p
       set resultado_local = (v_m #>> '{score,fullTime,home}')::int,
           resultado_visitante = (v_m #>> '{score,fullTime,away}')::int,
           jugado = true
-      where p.external_id = (v_m ->> 'id') and p.jugado = false;
+      where p.external_id = (v_m ->> 'id')
+        and (p.jugado = false
+             or p.resultado_local is distinct from (v_m #>> '{score,fullTime,home}')::int
+             or p.resultado_visitante is distinct from (v_m #>> '{score,fullTime,away}')::int);
       if found then v_updated := v_updated + 1; end if;
 
     elsif v_fase is not null then

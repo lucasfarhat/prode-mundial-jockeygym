@@ -26,12 +26,12 @@ export default function Reglas() {
         </div>
       </div>
 
-      <div className="card">
-        <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>⏱ Resultado en fases eliminatorias</h3>
-        <div style={{ fontSize: 13, color: '#666', lineHeight: 1.7 }}>
-          <p style={{ marginBottom: 6 }}>En las fases eliminatorias, el resultado que vale es el del <strong>final de la prórroga</strong> (si la hay), no el de los 90 minutos.</p>
-          <p style={{ marginBottom: 6 }}>Si el partido va a <strong>penales</strong>, el resultado oficial del prode es el <strong>empate</strong> con el que terminó la prórroga: los penales no cuentan para los puntos.</p>
-          <p>Ejemplo: termina 1-1 tras la prórroga y se define por penales → el resultado es 1-1. Quien puso 1-1 se lleva 3 puntos, quien puso otro empate 1 punto, y quien eligió un ganador no suma.</p>
+      <div className="card" style={{ border: '2px solid var(--gold)', background: 'var(--gold-soft)' }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, color: 'var(--gold-deep)' }}>⏱ IMPORTANTE · Resultado en fases eliminatorias</h3>
+        <div style={{ fontSize: 13, color: '#444', lineHeight: 1.7 }}>
+          <p style={{ marginBottom: 6 }}>En 16avos, octavos, cuartos, semis y final, el resultado que vale para el prode es el del <strong>final de la prórroga</strong> (si se juega alargue), <strong>NO el de los 90 minutos</strong>.</p>
+          <p style={{ marginBottom: 6 }}>Ejemplo: van 1-1 a los 90, en la prórroga se pone 2-1 y así termina → el resultado del prode es <strong>2-1</strong> (no 1-1).</p>
+          <p>Si el partido se define por <strong>penales</strong>, vale el <strong>empate</strong> con el que terminó la prórroga: los penales no suman. Ej: 1-1 tras la prórroga y gana uno por penales → el resultado del prode es <strong>1-1</strong>.</p>
         </div>
       </div>
 
