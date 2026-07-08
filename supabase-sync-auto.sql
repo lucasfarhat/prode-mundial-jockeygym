@@ -50,6 +50,8 @@ declare
   v_fase text;
   v_local text;
   v_visit text;
+  v_home int;
+  v_away int;
 begin
   -- Corre si hay partidos en los proximos 7 dias, o si todavia no estan
   -- los 104 partidos del torneo (para ir creando las fases eliminatorias).
@@ -90,18 +92,25 @@ begin
     end;
 
     if (v_m->>'status') = 'FINISHED' and (v_m #>> '{score,fullTime,home}') is not null then
-      -- Resultado final (despues de prorroga; football-data.fullTime ya
-      -- incluye el alargue, sin penales). Autocorrige aunque el partido ya
-      -- estuviera cargado, si el oficial cambio (evita resultados "trabados"
-      -- por un dato intermedio). El trigger recalcula los puntos.
+      -- Resultado final = al terminar la prorroga, SIN penales (regla del
+      -- prode). OJO: si el partido fue a penales, football-data SUMA los
+      -- penales dentro de fullTime (ej: 1-1 + 4-2 pen => fullTime 5-3),
+      -- asi que se los restamos. Sin penales, penalties es null y no resta.
+      -- Autocorrige aunque el partido ya estuviera cargado, si el oficial
+      -- cambio (evita resultados "trabados"). El trigger recalcula puntos.
+      v_home := (v_m #>> '{score,fullTime,home}')::int
+                - coalesce((v_m #>> '{score,penalties,home}')::int, 0);
+      v_away := (v_m #>> '{score,fullTime,away}')::int
+                - coalesce((v_m #>> '{score,penalties,away}')::int, 0);
+
       update public.partidos p
-      set resultado_local = (v_m #>> '{score,fullTime,home}')::int,
-          resultado_visitante = (v_m #>> '{score,fullTime,away}')::int,
+      set resultado_local = v_home,
+          resultado_visitante = v_away,
           jugado = true
       where p.external_id = (v_m ->> 'id')
         and (p.jugado = false
-             or p.resultado_local is distinct from (v_m #>> '{score,fullTime,home}')::int
-             or p.resultado_visitante is distinct from (v_m #>> '{score,fullTime,away}')::int);
+             or p.resultado_local is distinct from v_home
+             or p.resultado_visitante is distinct from v_away);
       if found then v_updated := v_updated + 1; end if;
 
     elsif v_fase is not null then
